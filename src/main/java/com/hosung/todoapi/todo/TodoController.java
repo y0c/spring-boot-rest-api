@@ -1,6 +1,7 @@
 package com.hosung.todoapi.todo;
 
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.hateoas.Link;
@@ -21,7 +22,13 @@ public class TodoController {
 
 
     @Autowired
-    public TodoRepository todoRepository;
+    private TodoRepository todoRepository;
+
+    @Autowired
+    private TodoVaildator vaildator;
+
+    @Autowired
+    private ModelMapper modelMapper;
 
     @GetMapping
     public ResponseEntity index() {
@@ -32,13 +39,22 @@ public class TodoController {
     }
 
     @PostMapping
-    public ResponseEntity createTodo(@RequestBody @Valid Todo todo, Errors errors) {
+    public ResponseEntity createTodo(@RequestBody @Valid TodoDto todoDto, Errors errors) {
+
+        //Annotation Level에서 탐지할 수 있는 에러
+        if( errors.hasErrors() ) {
+            return ResponseEntity.badRequest().body(errors);
+        }
+
+        vaildator.validate(todoDto, errors);
 
         if( errors.hasErrors() ) {
             return ResponseEntity.badRequest().body(errors);
         }
 
-        Todo savedTodo = todoRepository.save(todo);
+        Todo todo =  modelMapper.map(todoDto, Todo.class);
+
+        Todo savedTodo = todoRepository.save(modelMapper.map(todo, Todo.class));
         TodoResource savedResource = new TodoResource(savedTodo);
         URI uri = linkTo(TodoController.class).slash(savedTodo.getId()).toUri();
 
