@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -51,6 +52,7 @@ public class TodoControllerTest {
                         .status(TodoStatus.COMPLETED)
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
+                        .dueDate(LocalDateTime.now().plus(1, ChronoUnit.DAYS))
                         .build();
 
         this.mockMvc.perform(
@@ -75,4 +77,26 @@ public class TodoControllerTest {
 
     }
 
+    @Test
+    public void todoCreate_domain_error() throws Exception {
+        Todo todo = Todo.builder()
+                .id(232)
+                .title("오늘 할일")
+                .content("Test Todo!!!")
+                .status(TodoStatus.COMPLETED)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .dueDate(LocalDateTime.now().minus(1, ChronoUnit.DAYS))
+                .build();
+
+        this.mockMvc.perform(
+                post("/api/todos")
+                        .contentType(MediaTypes.HAL_JSON_UTF8_VALUE)
+                        .content(objectMapper.writeValueAsString(todo))
+        )
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0].field").value("dueDate"));
+
+    }
 }
