@@ -54,6 +54,15 @@ HATEOAS가 적용된 JSON
 }
 ```
 
+## JPA
+Java ORM 기술에 대한 표준 명세 API
+* 기본적인 쿼리를 자동으로 생성해준다. 
+* Mybatis와 비교했을때 생산성이 뛰어나다. 
+* JpaRepository<T, T> 상속만으로 CRUD관련 오퍼레이션을 사용가능.
+* @Entity Annotation을 통해 Table과 Mapping하며 필요시 DTO클래스를 작성한다. 
+* Pageable, PageRequest, Sort 를 통해서 paging & sort 가능  
+* 쿼리에서 성능이슈가 생길경우 JPQL, QueryDSL을 사용가능 
+
 
 ## Test 
 * JUnit 보다 조금더 간결한 API를 제공하는 AssertJ를 이용
