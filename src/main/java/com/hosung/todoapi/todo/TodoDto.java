@@ -13,9 +13,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor @AllArgsConstructor
 public class TodoDto {
 
-    @NotNull
-    private Integer id;
-
     @NotEmpty
     @Length(max=200)
     private String title;

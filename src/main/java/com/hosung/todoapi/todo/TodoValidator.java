@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 @Component
-public class TodoVaildator implements Validator {
+public class TodoValidator implements Validator {
 
 
     @Override
