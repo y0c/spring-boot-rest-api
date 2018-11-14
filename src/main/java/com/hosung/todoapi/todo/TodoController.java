@@ -3,9 +3,12 @@ package com.hosung.todoapi.todo;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.PagedResources;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 import java.net.URI;
+import java.util.Optional;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
@@ -25,17 +29,62 @@ public class TodoController {
     private TodoRepository todoRepository;
 
     @Autowired
-    private TodoVaildator vaildator;
+    private TodoValidator validator;
 
     @Autowired
     private ModelMapper modelMapper;
 
     @GetMapping
-    public ResponseEntity index() {
+    public ResponseEntity todoList(Pageable pageable, PagedResourcesAssembler<Todo> assembler) throws Exception{
+        Page<Todo> todos = todoRepository.findAll(pageable);
 
-//        return ResponseEntity.ok();
+        PagedResources<TodoResource> pagedResource = assembler.toResource(todos, t -> new TodoResource(t));
 
-        return ResponseEntity.ok(new TodoResource(Todo.builder().id(1).build()));
+        return ResponseEntity.ok(pagedResource);
+    }
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity getTodo(@PathVariable Integer id) {
+
+        Optional<Todo> todo = todoRepository.findById(id);
+
+        if( todo.isEmpty() ) {
+            return ResponseEntity.notFound().build();
+        }
+
+        TodoResource resource = new TodoResource(todo.get());
+
+        return ResponseEntity.ok(resource);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity updateTodo(@PathVariable Integer id, @RequestBody @Valid TodoDto todoDto, Errors errors) {
+
+        if(errors.hasErrors()) {
+            return ResponseEntity.badRequest().body(errors);
+        }
+
+        validator.validate(todoDto, errors);
+
+        if(errors.hasErrors()) {
+            return ResponseEntity.badRequest().body(errors);
+        }
+
+        Optional<Todo> byId = todoRepository.findById(id);
+
+        if(byId.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Todo existsTodo = byId.get();
+
+        modelMapper.map(todoDto, existsTodo);
+
+        Todo todo = todoRepository.save(existsTodo);
+        TodoResource resource = new TodoResource(todo);
+
+        return ResponseEntity.ok(resource);
     }
 
     @PostMapping
@@ -46,7 +95,7 @@ public class TodoController {
             return ResponseEntity.badRequest().body(errors);
         }
 
-        vaildator.validate(todoDto, errors);
+        validator.validate(todoDto, errors);
 
         if( errors.hasErrors() ) {
             return ResponseEntity.badRequest().body(errors);
@@ -59,6 +108,16 @@ public class TodoController {
         URI uri = linkTo(TodoController.class).slash(savedTodo.getId()).toUri();
 
         return ResponseEntity.created(uri).body(savedResource);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity deleteTodo(@PathVariable Integer id) {
+
+        todoRepository.deleteById(id);
+
+        Link link = linkTo(TodoController.class).withRel("list");
+
+        return ResponseEntity.ok(link);
     }
 }
 
