@@ -2,15 +2,23 @@ package com.hosung.todoapi.todo;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.restdocs.JUnitRestDocumentation;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import javax.print.attribute.standard.Media;
 import java.time.LocalDateTime;
@@ -19,6 +27,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.stream.IntStream;
 
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureRestDocs
 public class TodoControllerTest {
 
     @Autowired
@@ -38,6 +49,11 @@ public class TodoControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+
+    @Autowired
+    private WebApplicationContext context;
+
+
     @Test
     public void todolist_200() throws Exception {
         IntStream.range(0,30).forEach(this::saveTodo);
@@ -47,15 +63,16 @@ public class TodoControllerTest {
                 .param("size","10")
         )
                 .andDo(print())
+                .andDo(document("index"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("_links.self").hasJsonPath());
     }
 
     @Test
     public void getTodo() throws Exception{
-        saveTodo(1);
+        saveTodo(10);
         this.mockMvc.perform(
-            get("/api/todos/1")
+            get("/api/todos/10")
         )
             .andDo(print())
             .andExpect(status().isOk())

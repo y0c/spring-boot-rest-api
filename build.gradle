@@ -8,7 +8,13 @@ buildscript {
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
+    
 }
+
+plugins {
+    id "org.asciidoctor.convert" version "1.5.3"
+}
+
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
@@ -18,11 +24,11 @@ apply plugin: 'io.spring.dependency-management'
 group = 'com.hosung'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 11
+targetCompatibility = 11
 
 repositories {
     mavenCentral()
 }
-
 
 dependencies {
     implementation('org.springframework.boot:spring-boot-starter-data-jpa')
@@ -35,6 +41,24 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test')
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-hateoas
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-hateoas', version: '2.1.0.RELEASE'
+    // modelmapper
     compile group: 'org.modelmapper', name: 'modelmapper', version: '2.3.1'
+    // assertj
     testCompile 'org.assertj:assertj-core:3.6.2'
+
+    asciidoctor 'org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.2.RELEASE'
+    testCompile 'org.springframework.restdocs:spring-restdocs-mockmvc:2.0.2.RELEASE'
+}
+
+ext {
+    snippetsDir = file('build/generated-snippets')
+}
+
+test {
+    outputs.dir snippetsDir
+}
+
+asciidoctor {
+    inputs.dir snippetsDir
+    dependsOn test
 }

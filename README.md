@@ -84,3 +84,12 @@ lombok은 Annotation을 붙이는것으로 많은양의 중복코드를 대신 �
 ## spring-validation 
 Annotation을 활용한 Field Level의 validation과 직접 custom validator를 통해 Domain Level Validation이 가능하다. 
 
+
+## Rest Docs
+* Spring MVC Test로 작성된 Test Case에 대해서 문서화를 편하게 할 수 있도록 제공한다. 
+* TDD를 통해서 작성된 문서이므로 문서화에 대한 정확성을 어느정도 보장해줄 수 있다. 
+
+
+## Todo
+- [ ] spring-security
+- [ ] PostgreSQL
