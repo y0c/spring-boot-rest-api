@@ -15,6 +15,7 @@ import org.springframework.hateoas.MediaTypes;
 import org.springframework.restdocs.JUnitRestDocumentation;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation;
+import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -27,8 +28,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.stream.IntStream;
 
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -40,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureRestDocs
 public class TodoControllerTest {
 
+
     @Autowired
     private TodoRepository todoRepository;
 
@@ -49,10 +57,8 @@ public class TodoControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-
     @Autowired
     private WebApplicationContext context;
-
 
     @Test
     public void todolist_200() throws Exception {
@@ -63,22 +69,11 @@ public class TodoControllerTest {
                 .param("size","10")
         )
                 .andDo(print())
-                .andDo(document("index"))
+                .andDo(document("get-todos"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("_links.self").hasJsonPath());
     }
 
-    @Test
-    public void getTodo() throws Exception{
-        saveTodo(10);
-        this.mockMvc.perform(
-            get("/api/todos/10")
-        )
-            .andDo(print())
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("id").value(1))
-            .andExpect(jsonPath("_links.self").hasJsonPath());
-    }
 
     private Todo saveTodo(int index) {
         Todo todo = Todo.builder()
@@ -111,6 +106,31 @@ public class TodoControllerTest {
                 .content(objectMapper.writeValueAsString(todo))
         )
                 .andDo(print())
+                .andDo(document("create-todo", links(
+                    linkWithRel("self").description("link to self"),
+                    linkWithRel("update").description("link to update"),
+                    linkWithRel("profile").description("link to profile"),
+                    linkWithRel("todos").description("link to todos")
+                ),
+                requestFields(
+                    fieldWithPath("id").description("Todo id"),
+                    fieldWithPath("status").description("Todo status"),
+                    fieldWithPath("createdAt").description("Todo createdAt"),
+                    fieldWithPath("updatedAt").description("Todo updatedAt"),
+                    fieldWithPath("dueDate").description("Todo dueDate"),
+                    fieldWithPath("title").description("Todo Title"),
+                    fieldWithPath("content").description("Todo Content")
+                ),
+                relaxedResponseFields(
+                    fieldWithPath("id").description("Todo id"),
+                    fieldWithPath("status").description("Todo status"),
+                    fieldWithPath("createdAt").description("Todo createdAt"),
+                    fieldWithPath("updatedAt").description("Todo updatedAt"),
+                    fieldWithPath("dueDate").description("Todo dueDate"),
+                    fieldWithPath("title").description("Todo Title"),
+                    fieldWithPath("content").description("Todo Content")
+                )
+                ))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("id").hasJsonPath());
     }
@@ -151,19 +171,35 @@ public class TodoControllerTest {
     }
 
     @Test
+    public void getTodo() throws Exception{
+        Todo todo = saveTodo(10);
+
+
+        this.mockMvc.perform(
+                get("/api/todos/" + todo.getId())
+                .contentType(MediaTypes.HAL_JSON_UTF8_VALUE)
+        )
+                .andDo(print())
+                .andDo(document("get-todo"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("_links.self").hasJsonPath());
+    }
+
+    @Test
     public void todoUpdate_200() throws Exception {
         Todo todo = saveTodo(1);
         Todo updateTodo = saveTodo(2);
 
         this.mockMvc.perform(
-                put("/api/todos/1")
+                put("/api/todos/" + todo.getId())
                 .contentType(MediaTypes.HAL_JSON_UTF8_VALUE)
                 .content(objectMapper.writeValueAsString(updateTodo))
         )
             .andDo(print())
+            .andDo(document("update-todo"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("_links.self").hasJsonPath())
-            .andExpect(jsonPath("title").value("2"));
+            .andExpect(jsonPath("title").value(updateTodo.getTitle()));
     }
 
     @Test

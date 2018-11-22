@@ -1,125 +1,132 @@
-= Getting started with Spring REST Docs
+= TODO REST API Guide
+임호성;
 :doctype: book
 :icons: font
 :source-highlighter: highlightjs
 :toc: left
-:toc-title: Index
 :toclevels: 4
 :sectlinks:
+:operation-curl-request-title: Example request
+:operation-http-response-title: Example response
 
-== Customers API
+[[overview]]
+= 개요
 
-Customers API documentation generated from unit tests with Spring REST Docs.
+[[overview-http-verbs]]
+== HTTP 동사
 
-=== POST /customers
+본 REST API에서 사용하는 HTTP 동사(verbs)는 가능한한 표준 HTTP와 REST 규약을 따릅니다.
 
-.curl sample request
-include::{snippets}/shouldCreateCustomer/curl-request.adoc[]
-.HTTP Response
-include::{snippets}/shouldCreateCustomer/http-response.adoc[]
-.Request fields
-include::{snippets}/shouldCreateCustomer/request-fields.adoc[]
-.Response fields
-include::{snippets}/shouldCreateCustomer/response-fields.adoc[]
-
-=== GET /customer/{customerId}
-
-
-.curl sample request
-include::{snippets}/shouldGetOneCustomer/curl-request.adoc[]
-.HTTP Response
-include::{snippets}/shouldGetOneCustomer/http-response.adoc[]
-.Request parameters
-include::{snippets}/shouldGetOneCustomer/path-parameters.adoc[]
-.Output
-include::{snippets}/shouldGetOneCustomer/response-fields.adoc[]
-
-= Generated documentation
-
-include::{snippets}/customers-controller-auto-docs-test/create-customer/auto-section.adoc[]
-include::{snippets}/customers-controller-auto-docs-test/test-find-all/auto-section.adoc[]
-include::{snippets}/customers-controller-auto-docs-test/test-find-one/auto-section.adoc[]
-include::{snippets}/customers-controller-auto-docs-test/test-update/auto-section.adoc[]
-
-[[overview-pagination]]
-=== Pagination
-
-Spring pagination facilities offer following request parameters:
-
-.Request parameters
 |===
-| Path | Type | Optional | Description
+| 동사 | 용례
 
-| page
-| Integer
-| false
-| Page you want to retrieve, 0 indexed and defaults to 0.
+| `GET`
+| 리소스를 가져올 때 사용
 
-| size
-| Integer
-| false
-| Size of the page you want to retrieve, defaults to 20.
+| `POST`
+| 새 리소스를 만들 때 사용
 
-| sort
-| String
-| false
-| Properties that should be sorted by in the format `property,property(,ASC\|DESC)`.
-Default sort direction is ascending. Use multiple sort parameters if you want to
-switch directions, e.g. `?sort=firstname&sort=lastname,asc`.
+| `PUT`
+| 기존 리소스를 수정할 때 사용
+
+| `PATCH`
+| 기존 리소스의 일부를 수정할 때 사용
+
+| `DELETE`
+| 기존 리소스를 삭제할 떄 사용
 |===
 
-Pagination response has following structure:
+[[overview-http-status-codes]]
+== HTTP 상태 코드
 
-.Response structure
+본 REST API에서 사용하는 HTTP 상태 코드는 가능한한 표준 HTTP와 REST 규약을 따릅니다.
+
 |===
-| Path | Type | Optional | Description
+| 상태 코드 | 용례
 
-include::{snippets}/customers-controller-test/test-create-one-customer/auto-section.adoc[]
-include::{snippets}/customers-controller-test/test-get-one-customer/auto-section.adoc[]
-include::{snippets}/customers-controller-test/test-update/auto-section.adoc[]
-include::{snippets}/customers-controller-test/test-find-all/auto-section.adoc[]
-| content
-| Array[Object]
-| false
-| Actual items.
+| `200 OK`
+| 요청을 성공적으로 처리함
 
-| totalElements
-| Integer
-| false
-| Total count.
+| `201 Created`
+| 새 리소스를 성공적으로 생성함. 응답의 `Location` 헤더에 해당 리소스의 URI가 담겨있다.
 
-| totalPages
-| Integer
-| false
-| Total pages with current page size.
+| `204 No Content`
+| 기존 리소스를 성공적으로 수정함.
 
-| last
-| Boolean
-| false
-| If this page is the last one.
+| `400 Bad Request`
+| 잘못된 요청을 보낸 경우. 응답 본문에 더 오류에 대한 정보가 담겨있다.
 
-| numberOfElements
-| Integer
-| false
-| Actual size of content array (number of items).
-
-| first
-| Boolean
-| false
-| If this page is the first one.
-
-| sort
-| Object
-| true
-| Sort information object.
-
-| size
-| Integer
-| false
-| Requested size of the page.
-
-| number
-| Integer
-| false
-| Page number.
+| `404 Not Found`
+| 요청한 리소스가 없음.
 |===
+
+[[overview-errors]]
+== 오류
+
+에러 응답이 발생했을 때 (상태 코드 >= 400), 본문에 해당 문제를 기술한 JSON 객체가 담겨있다. 에러 객체는 다음의 구조를 따른다.
+
+include::{snippets}/errors/response-fields.adoc[]
+
+예를 들어, 잘못된 요청으로 할 일를 만들려고 했을 때 다음과 같은 `400 Bad Request` 응답을 받는다.
+
+include::{snippets}/errors/http-response.adoc[]
+
+[[overview-hypermedia]]
+== 하이퍼미디어
+
+본 REST API는 하이퍼미디어와 사용하며 응답에 담겨있는 리소스는 다른 리소스에 대한 링크를 가지고 있다.
+응답은 http://stateless.co/hal_specification.html[Hypertext Application from resource to resource. Language (HAL)] 형식을 따른다.
+링크는 `_links`라는 키로 제공한다. 본 API의 사용자(클라이언트)는 URI를 직접 생성하지 않아야 하며, 리소스에서 제공하는 링크를 사용해야 한다.
+
+== TODO API
+
+TODO API documentation generated from unit tests with Spring REST Docs.
+
+[[resources]]
+= 리소스
+
+[[resources-index]]
+== 인덱스
+
+인덱스는 서비스 진입점을 제공한다.
+
+
+[[resources-index-access]]
+=== 인덱스 조회
+
+`GET` 요청을 사용하여 인덱스에 접근할 수 있다.
+
+operation::index[snippets='response-body,http-response,links']
+
+[[resources-todos]]
+== 할 일
+
+할 일 리소스는 할 일을 만들거나 조회할 때 사용한다.
+
+[[resources-todos-list]]
+=== 할 일 목록 조회
+
+`GET` 요청을 사용하여 서비스의 모든 할 일을 조회할 수 있다.
+
+operation::get-todos[snippets='response-fields,curl-request,http-response,links']
+
+[[resources-todos-create]]
+=== 할 일 생성
+
+`POST` 요청을 사용해서 새 할 일을 만들 수 있다.
+
+operation::create-todo[snippets='request-fields,curl-request,http-response,links']
+
+[[resources-todos-get]]
+=== 할 일 조회
+
+`Get` 요청을 사용해서 기존 할 일 하나를 조회할 수 있다.
+
+operation::get-todo[snippets='request-fields,curl-request,http-response,links']
+
+[[resources-todos-update]]
+=== 할 일 수정
+
+`PUT` 요청을 사용해서 기존 할 일를 수정할 수 있다.
+
+operation::update-todo[snippets='request-fields,curl-request,http-response,links']=

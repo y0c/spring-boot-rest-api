@@ -40,6 +40,8 @@ public class TodoController {
 
         PagedResources<TodoResource> pagedResource = assembler.toResource(todos, t -> new TodoResource(t));
 
+        pagedResource.add(new Link("/docs/index.html#resources-index", "profile"));
+
         return ResponseEntity.ok(pagedResource);
     }
 
@@ -47,13 +49,13 @@ public class TodoController {
     @GetMapping("/{id}")
     public ResponseEntity getTodo(@PathVariable Integer id) {
 
-        Optional<Todo> todo = todoRepository.findById(id);
+        Optional<Todo> byId = todoRepository.findById(id);
 
-        if( todo.isEmpty() ) {
+        if( !byId.isPresent() ) {
             return ResponseEntity.notFound().build();
         }
 
-        TodoResource resource = new TodoResource(todo.get());
+        TodoResource resource = new TodoResource(byId.get());
 
         return ResponseEntity.ok(resource);
     }
@@ -73,7 +75,7 @@ public class TodoController {
 
         Optional<Todo> byId = todoRepository.findById(id);
 
-        if(byId.isEmpty()) {
+        if(!byId.isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
@@ -106,6 +108,10 @@ public class TodoController {
         Todo savedTodo = todoRepository.save(modelMapper.map(todo, Todo.class));
         TodoResource savedResource = new TodoResource(savedTodo);
         URI uri = linkTo(TodoController.class).slash(savedTodo.getId()).toUri();
+
+        savedResource.add(linkTo(TodoController.class).withRel("todos"));
+        savedResource.add(linkTo(TodoController.class).slash(savedTodo.getId()).withRel("update"));
+        savedResource.add(new Link("/docs/index.html#resources-create-todo", "profile"));
 
         return ResponseEntity.created(uri).body(savedResource);
     }
